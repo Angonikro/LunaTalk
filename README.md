@@ -1,6 +1,6 @@
 # LunaTalk 0.2.15
 
-**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie). Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. 
+**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie) Raspberry PI 500. Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. 
 Das System-Tray wird weiterhin über GTK 3 bereitgestellt.
 
 ![LunaTalk](lunatalk.png)
