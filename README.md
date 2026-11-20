@@ -113,3 +113,19 @@ Die im Benutzerprofil gespeicherten Sitzungsdaten werden dadurch nicht automatis
 Bei einer ZIP-Ausführung genügt es, den entpackten Ordner zu löschen. Benutzerbezogene Sitzungsdaten werden dadurch nicht entfernt.
 
 73 de DO2QG Andreas
+## ZIP-Startmenüeintrag (optional)
+
+Für eine ZIP-Installation kann ein persönlicher Startmenüeintrag angelegt werden. Im entpackten Projektordner ausführen:
+
+```bash
+chmod +x install_desktop.sh
+./install_desktop.sh
+```
+
+Das Skript erstellt den Eintrag mit dem tatsächlichen absoluten Pfad dieses Ordners unter `~/.local/share/applications`. Nach dem Verschieben oder Löschen des Projektordners muss der Eintrag erneut eingerichtet bzw. entfernt werden.
+
+Zum Entfernen des persönlichen Menüeintrags:
+
+```bash
+rm -f ~/.local/share/applications/lunatalk-zip.desktop
+```

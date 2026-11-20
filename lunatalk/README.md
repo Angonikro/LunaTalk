@@ -1,13 +1,30 @@
 # LunaTalk 0.2.16
 
-**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie). Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. Das System-Tray wird nativ über Qt QSystemTrayIcon bereitgestellt; GTK wird nicht benötigt. ZIP und DEB verwenden /usr/bin/python3 -s für Debian-System-Qt.
+**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie). Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. 
+Das System-Tray wird nativ über Qt `QSystemTrayIcon` bereitgestellt; GTK wird nicht benötigt. ZIP und DEB starten ausdrücklich mit `/usr/bin/python3 -s`, damit Debian-System-Qt verwendet und `~/.local` ignoriert wird.
+
+![LunaTalk](lunatalk.png)
+
+[Github Seite](https://github.com/Angonikro/LunaTalk/)
+
+## Funktionen und Hinweise
+
+- WhatsApp Web in einem eigenen Desktop-Fenster.
+- Lokale Speicherung der WhatsApp-Sitzung und Einstellungen.
+- Deutsch-/Englisch-Umschaltung in der linken Seitenleiste.
+- Qt-System-Tray (`QSystemTrayIcon`).
+- Rechtschreibprüfung über Qt WebEngine mit deutschen und englischen Hunspell-Wörterbüchern (nach erfolgreicher BDIC-Konvertierung).
+- Native Rechtsklick-Funktionen und Rechtschreibvorschläge von Qt WebEngine.
+- Benachrichtigungs-, Berechtigungs- und Video-Einstellungen in der linken Seitenleiste.
+
+Die obere Leiste ist für **Seitenleiste ein-/ausblenden** und **LunaTalk beenden** vorgesehen. Die weiteren Funktionen befinden sich links in der Seitenleiste.
 
 ## Voraussetzungen
 
 - Debian 13 (Trixie), empfohlen auf Raspberry Pi OS / Raspberry Pi 500
 - ARM64 oder eine von Debian unterstützte Architektur
 - Internetverbindung für WhatsApp Web
-- Für die ZIP-Ausführung: Debian-System-Python 3 und systemweit installierte PySide6-/Qt-WebEngine-Pakete
+- Für die ZIP-Ausführung: Debian-System-Python 3 und die systemweit installierten PySide6-/Qt-WebEngine-Pakete 
 
 ## Installation mit dem DEB-Paket
 
@@ -31,7 +48,8 @@
    lunatalk
    ```
 
-Das DEB installiert den Programmcode unter `/usr/share/lunatalk`, den Startbefehl unter `/usr/bin/lunatalk`, den Menüeintrag unter `/usr/share/applications/lunatalk.desktop` und das Startmenü-Symbol im hicolor-Icon-Verzeichnis. Das GTK3-Tray-Symbol bleibt zusätzlich unter `/usr/share/lunatalk/icons/lunatalk.svg`.
+Das DEB installiert den Programmcode unter `/usr/share/lunatalk`, den Startbefehl unter `/usr/bin/lunatalk`, den Menüeintrag unter `/usr/share/applications/lunatalk.desktop` 
+und das Startmenü-Symbol im hicolor-Icon-Verzeichnis. Das Tray-Symbol wird aus dem Programm-Icon-Verzeichnis geladen.
 
 ## Start aus dem ZIP-Archiv
 
@@ -41,7 +59,7 @@ Das ZIP installiert LunaTalk nicht systemweit. Es startet direkt aus dem entpack
 2. Öffne ein Terminal und wechsle in den entpackten Ordner:
 
    ```bash
-   cd ~/Downloads/LunaTalk_0.2.15
+   cd ~/Downloads/LunaTalk
    ```
 
    Wenn du das Archiv an einem anderen Ort entpackt hast, passe den Pfad entsprechend an.
@@ -72,18 +90,6 @@ Das ZIP installiert LunaTalk nicht systemweit. Es startet direkt aus dem entpack
 
 **Wichtig:** Den Startbefehl im Projektordner ausführen, in dem der Unterordner `lunatalk` liegt. Die Wörterbuch-Konvertierung muss nach dem Installieren der Abhängigkeiten einmal ausgeführt werden.
 
-## Funktionen und Hinweise
-
-- WhatsApp Web in einem eigenen Desktop-Fenster.
-- Lokale Speicherung der WhatsApp-Sitzung und Einstellungen.
-- Deutsch-/Englisch-Umschaltung in der linken Seitenleiste.
-- GTK3-System-Tray.
-- Rechtschreibprüfung über Qt WebEngine mit deutschen und englischen Hunspell-Wörterbüchern (nach erfolgreicher BDIC-Konvertierung).
-- Native Rechtsklick-Funktionen und Rechtschreibvorschläge von Qt WebEngine.
-- Benachrichtigungs-, Berechtigungs- und Video-Einstellungen in der linken Seitenleiste.
-
-Die obere Leiste ist für **Seitenleiste ein-/ausblenden** und **LunaTalk beenden** vorgesehen. Die weiteren Funktionen befinden sich links in der Seitenleiste.
-
 ## Daten und Datenschutz
 
 WhatsApp-Sitzungsdaten werden lokal im Benutzerprofil unter `~/.local/share/lunatalk` gespeichert. Einstellungen werden benutzerbezogen abgelegt. Die Sitzung bleibt damit auch nach einem Neustart der Anwendung erhalten.
@@ -106,6 +112,20 @@ Die im Benutzerprofil gespeicherten Sitzungsdaten werden dadurch nicht automatis
 
 Bei einer ZIP-Ausführung genügt es, den entpackten Ordner zu löschen. Benutzerbezogene Sitzungsdaten werden dadurch nicht entfernt.
 
-## Versionshinweis 0.2.15
+73 de DO2QG Andreas
+## ZIP-Startmenüeintrag (optional)
 
-Diese Ausgabe aktualisiert die Versionsanzeige in der Anwendung und korrigiert ausschließlich die Installation des Startmenü-Icons. Das vorhandene GTK3-Tray-Icon bleibt an seinem bisherigen Pfad. Die Programmfunktionen und die GTK3-Tray-Implementierung wurden nicht umgebaut.
+Für eine ZIP-Installation kann ein persönlicher Startmenüeintrag angelegt werden. Im entpackten Projektordner ausführen:
+
+```bash
+chmod +x install_desktop.sh
+./install_desktop.sh
+```
+
+Das Skript erstellt den Eintrag mit dem tatsächlichen absoluten Pfad dieses Ordners unter `~/.local/share/applications`. Nach dem Verschieben oder Löschen des Projektordners muss der Eintrag erneut eingerichtet bzw. entfernt werden.
+
+Zum Entfernen des persönlichen Menüeintrags:
+
+```bash
+rm -f ~/.local/share/applications/lunatalk-zip.desktop
+```
