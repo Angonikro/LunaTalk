@@ -1,3 +1,4 @@
 #!/bin/sh
-export PYTHONPATH="/usr/share${PYTHONPATH:+:$PYTHONPATH}"
-exec /usr/bin/python3 -s -m lunatalk "$@"
+set -eu
+APP_DIR="/usr/share/lunatalk"
+exec /usr/bin/python3 -s "$APP_DIR/runtime_selector.py" "$@"

@@ -44,7 +44,7 @@ import PySide6.QtWebEngineCore as _QtWebEngineCoreModule
 from .tray import QtStatusTray
 
 APP_NAME = "LunaTalk"
-APP_VERSION = "0.2.16"
+APP_VERSION = "0.2.17"
 # Debian 13 / Raspberry Pi 500: QtWebEngine 6.8.2 uses Chromium 122.
 # Keep the advertised Chrome version aligned with the actual Chromium engine.
 DEFAULT_USER_AGENT = (

@@ -1,4 +1,14 @@
-# LunaTalk – Änderungsprotokoll
+# LunaTalk 0.2.17 – Qt-Laufzeit-Auswahl verbessert
+
+- Laufzeit-Erkennung findet System-, Benutzer-, /usr/local-, /opt- und gängige virtuelle Python-Umgebungen.
+- Jede gefundene Laufzeit wird mit dem passenden Python-Interpreter geprüft; dadurch können auch PySide6-Installationen in virtuellen Umgebungen korrekt gestartet werden.
+- Prüfung umfasst PySide6, QtWebEngineCore, QtWebEngineWidgets und den zugehörigen QtWebEngineProcess.
+- Die Auswahlliste zeigt Qt-/PySide6-Version, Installationsort und bekannte Praxisergebnisse.
+- Qt 6.8.2 (Systeminstallation) ist als Videowiedergabe getestet,nach Backport update geht auch die Telefonie. die benutzerlokale Qt-6.11.2-Laufzeit ist als WhatsApp-Telefonie getestet. Andere Versionen werden ausdrücklich als ungetestet markiert.
+- Die Auswahl erscheint nur, wenn mehr als eine verwendbare Qt-/PySide6-Laufzeit gefunden wird; bei genau einer Laufzeit startet LunaTalk direkt mit ihr.
+- Auswahl gilt nur für den aktuellen Start; vorhandene Installationen bleiben unverändert.
+- Startauswahl für die installierten Qt-Laufzeiten ergänzt; sie erscheint nur bei mehreren verwendbaren Laufzeiten. Bei nur einer Laufzeit startet LunaTalk direkt.
+- Eine benutzerlokale Laufzeit wird nur als Telefonie-Option angeboten, wenn Qt 6.11 oder neuer tatsächlich importierbar ist.
 
 ## 0.2.16
 - Neues natives Qt-System-Tray.
