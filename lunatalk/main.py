@@ -7,6 +7,8 @@ import re
 import sys
 import shutil
 import subprocess
+import importlib.metadata
+import json
 from pathlib import Path
 
 # Qt WebEngine reads this variable during Chromium initialization. Resolve
@@ -25,7 +27,7 @@ APP_DICTIONARY_DIR = next(
 )
 os.environ["QTWEBENGINE_DICTIONARIES_PATH"] = str(APP_DICTIONARY_DIR)
 
-from PySide6.QtCore import QUrl, Signal, QSettings, QTimer, Qt
+from PySide6.QtCore import QUrl, Signal, QSettings, QTimer, Qt, QLibraryInfo, qVersion
 from PySide6.QtGui import QAction, QContextMenuEvent
 from PySide6.QtWidgets import (
     QApplication, QFrame, QLabel, QMainWindow, QPushButton,
@@ -36,11 +38,13 @@ from PySide6.QtWebEngineCore import (
     QWebEngineProfile, QWebEnginePage, QWebEngineSettings, QWebEnginePermission, QWebEngineScript,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
+import PySide6
+import PySide6.QtWebEngineCore as _QtWebEngineCoreModule
 
 from .tray import QtStatusTray
 
 APP_NAME = "LunaTalk"
-APP_VERSION = "0.2.15"
+APP_VERSION = "0.2.16"
 # Debian 13 / Raspberry Pi 500: QtWebEngine 6.8.2 uses Chromium 122.
 # Keep the advertised Chrome version aligned with the actual Chromium engine.
 DEFAULT_USER_AGENT = (
@@ -310,23 +314,80 @@ class WhatsAppView(QWebEngineView):
             self._spellcheck_requested_enabled and bool(self._available_spell_languages)
         )
 
-    def _check_video_capabilities(self):
+    def _check_video_capabilities(self, attempt: int = 0):
+        """Probe Chromium and return JSON to avoid Qt QVariant/QJSValue ambiguity."""
         script = r"""(() => {
-          const v = document.createElement('video');
-          const can = type => { try { return v.canPlayType(type) || 'nein'; } catch (_) { return 'Fehler'; } };
-          const ms = window.MediaSource;
-          const mse = type => { try { return ms && ms.isTypeSupported ? ms.isTypeSupported(type) : false; } catch (_) { return false; } };
-          return {
-            h264: can('video/mp4; codecs="avc1.42E01E"'),
-            h264High: can('video/mp4; codecs="avc1.640028"'),
-            aac: can('audio/mp4; codecs="mp4a.40.2"'),
-            webmVp8: can('video/webm; codecs="vp8"'),
-            webmVp9: can('video/webm; codecs="vp9"'),
-            mseH264: mse('video/mp4; codecs="avc1.42E01E"'),
-            mseVp9: mse('video/webm; codecs="vp9"')
-          };
+          try {
+            if (!document || !document.documentElement) {
+              return JSON.stringify({ready: false, reason: 'document-not-ready'});
+            }
+            const v = document.createElement('video');
+            const can = type => {
+              try { return v.canPlayType(type) || 'nein'; }
+              catch (e) { return 'Fehler: ' + String(e); }
+            };
+            const ms = window.MediaSource;
+            const mse = type => {
+              try { return !!(ms && ms.isTypeSupported && ms.isTypeSupported(type)); }
+              catch (e) { return false; }
+            };
+            return JSON.stringify({
+              ready: true,
+              userAgent: navigator.userAgent || 'unbekannt',
+              platform: navigator.platform || 'unbekannt',
+              h264: can('video/mp4; codecs="avc1.42E01E"'),
+              h264High: can('video/mp4; codecs="avc1.640028"'),
+              aac: can('audio/mp4; codecs="mp4a.40.2"'),
+              webmVp8: can('video/webm; codecs="vp8"'),
+              webmVp9: can('video/webm; codecs="vp9"'),
+              mseH264: mse('video/mp4; codecs="avc1.42E01E"'),
+              mseVp9: mse('video/webm; codecs="vp9"')
+            });
+          } catch (e) {
+            return JSON.stringify({ready: false, scriptError: String(e)});
+          }
         })()"""
-        self.page().runJavaScript(script, self.video_capabilities.emit)
+        self.page().runJavaScript(
+            script,
+            lambda result, n=attempt: self._video_capabilities_result(result, n)
+        )
+
+    def _video_capabilities_result(self, result, attempt: int):
+        data = None
+        if isinstance(result, str):
+            try:
+                data = json.loads(result)
+            except (TypeError, ValueError):
+                data = None
+        elif isinstance(result, dict):
+            # Compatibility fallback for bindings that already convert JSON objects.
+            data = result
+
+        if not isinstance(data, dict) or not data.get("ready"):
+            if attempt < 5:
+                QTimer.singleShot(900, lambda n=attempt + 1: self._check_video_capabilities(n))
+                return
+            detail = None
+            if isinstance(data, dict):
+                detail = data.get("scriptError") or data.get("reason")
+            data = {
+                "probeError": (
+                    "JavaScript-Prüfung ohne gültige JSON-Antwort"
+                    + (f": {detail}" if detail else "")
+                    + f" (Rückgabetyp: {type(result).__name__})"
+                )
+            }
+
+        # These values describe the exact Python/Qt modules loaded by this process.
+        try:
+            data["pysideVersion"] = getattr(PySide6, "__version__", importlib.metadata.version("PySide6"))
+        except Exception:
+            data["pysideVersion"] = getattr(PySide6, "__version__", "unbekannt")
+        data["qtRuntimeVersion"] = qVersion()
+        data["qtLibraryVersion"] = QLibraryInfo.version().toString()
+        data["pysidePath"] = str(Path(PySide6.__file__).resolve())
+        data["qtWebEngineCorePath"] = str(Path(_QtWebEngineCoreModule.__file__).resolve())
+        self.video_capabilities.emit(data)
 
     def _permission_requested(self, permission):
         """Handle WhatsApp Web permissions explicitly and fail closed."""
@@ -944,34 +1005,44 @@ class MainWindow(QMainWindow):
 
     def _video_capabilities_checked(self, data: dict):
         self._last_video_capabilities = dict(data or {})
-        h264 = data.get("h264", "nein") not in ("", "nein", "no")
-        webm = data.get("webmVp8", "nein") not in ("", "nein", "no")
-        if h264:
-            self.statusBar().showMessage("Video-Codecs: H.264 verfügbar · WebM " + str(data.get("webmVp8", "unbekannt")), 9000)
-        elif webm:
-            self.statusBar().showMessage("Achtung: H.264/MP4 fehlt in QtWebEngine · WebM ist verfügbar", 12000)
+        if data.get("probeError"):
+            self.statusBar().showMessage("Video-Prüfung: keine JavaScript-Antwort erhalten", 10000)
         else:
-            self.statusBar().showMessage("Achtung: QtWebEngine meldet keine H.264- oder WebM-Videowiedergabe", 12000)
+            h264 = data.get("h264", "unbekannt") not in ("", "nein", "no", "unbekannt")
+            webm = data.get("webmVp8", "unbekannt") not in ("", "nein", "no", "unbekannt")
+            if h264:
+                self.statusBar().showMessage("Video-Prüfung: H.264 wird von der laufenden QtWebEngine-Instanz gemeldet", 9000)
+            elif webm:
+                self.statusBar().showMessage("Video-Prüfung: WebM wird gemeldet; H.264 nicht bestätigt", 12000)
+            else:
+                self.statusBar().showMessage("Video-Prüfung: Codec-Antworten der laufenden QtWebEngine-Instanz prüfen", 12000)
 
         lines = [
+            f"PySide6-Version: {data.get('pysideVersion', 'unbekannt')}",
+            f"Qt-Laufzeit: {data.get('qtRuntimeVersion', 'unbekannt')}",
+            f"Qt-Bibliotheksversion: {data.get('qtLibraryVersion', 'unbekannt')}",
+            f"PySide6-Modul: {data.get('pysidePath', 'unbekannt')}",
+            f"QtWebEngineCore-Modul: {data.get('qtWebEngineCorePath', 'unbekannt')}",
+            f"Chromium User-Agent: {data.get('userAgent', 'nicht abgefragt')}",
             f"H.264 / MP4: {data.get('h264', 'unbekannt')}",
             f"H.264 High Profile: {data.get('h264High', 'unbekannt')}",
             f"AAC / MP4: {data.get('aac', 'unbekannt')}",
             f"WebM / VP8: {data.get('webmVp8', 'unbekannt')}",
             f"WebM / VP9: {data.get('webmVp9', 'unbekannt')}",
-            f"MediaSource H.264: {'Ja' if data.get('mseH264') else 'Nein'}",
-            f"MediaSource VP9: {'Ja' if data.get('mseVp9') else 'Nein'}",
+            f"MediaSource H.264: {data.get('mseH264', 'unbekannt')}",
+            f"MediaSource VP9: {data.get('mseVp9', 'unbekannt')}",
         ]
-        self._video_report_text = "\\n".join(lines)
+        if data.get("probeError"):
+            lines.append(data["probeError"])
+        self._video_report_text = "\n".join(lines)
         if getattr(self, "_video_check_requested", False):
             self._video_check_requested = False
             report = self._video_report_text
             if self.language == "en":
                 report = report.replace("Ja", "Yes").replace("Nein", "No").replace("unbekannt", "unknown")
-                report = report.replace("H.264 / MP4", "H.264 / MP4").replace("H.264 High Profile", "H.264 High Profile")
-                report += "\n\nNote: FFmpeg alone cannot add missing H.264 support to QtWebEngine."
+                report += "\n\nThe report identifies the Qt/PySide6 modules loaded by this running LunaTalk process."
             else:
-                report += "\n\nHinweis: FFmpeg allein kann fehlende H.264-Unterstützung in QtWebEngine nicht nachträglich ergänzen."
+                report += "\n\nDie Versions- und Pfadangaben stammen aus genau diesem laufenden LunaTalk-Prozess. Es wird kein fest codierter Qt-6.11.1-Pfad verwendet."
             QMessageBox.information(self, self._t("Video-Unterstützung", "Video support"), report)
 
     def _set_connection_status(self, message: str):

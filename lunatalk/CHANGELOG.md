@@ -3,6 +3,7 @@
 ## 0.2.16
 - Neues natives Qt-System-Tray.
 - LunaTalk verwendet das vom System installierte Qt.
+- Video-Diagnose zeigt die tatsächlich geladene PySide6-/Qt-/QtWebEngine-Installation samt Modulpfaden; kein fest codierter Qt-6.11.1-Pfad.
 
 ## 0.2.15 – Qt-System-Tray statt GTK
 

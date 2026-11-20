@@ -16,6 +16,7 @@ Das System-Tray wird nativ über Qt `QSystemTrayIcon` bereitgestellt; GTK wird n
 - Rechtschreibprüfung über Qt WebEngine mit deutschen und englischen Hunspell-Wörterbüchern (nach erfolgreicher BDIC-Konvertierung).
 - Native Rechtsklick-Funktionen und Rechtschreibvorschläge von Qt WebEngine.
 - Benachrichtigungs-, Berechtigungs- und Video-Einstellungen in der linken Seitenleiste.
+- Video-Diagnose ermittelt die tatsächlich geladene PySide6-/Qt-/QtWebEngine-Version und deren Modulpfade zur Laufzeit; es wird kein fest codierter Qt-Versionspfad vorausgesetzt.
 
 Die obere Leiste ist für **Seitenleiste ein-/ausblenden** und **LunaTalk beenden** vorgesehen. Die weiteren Funktionen befinden sich links in der Seitenleiste.
 
