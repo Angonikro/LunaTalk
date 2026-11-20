@@ -1,0 +1,36 @@
+#!/bin/sh
+set -u
+case "${1:-configure}" in
+  configure)
+    OUT=/usr/share/lunatalk/qtwebengine_dictionaries
+    mkdir -p "$OUT"
+    CONVERTER=$(command -v convert-bdic 2>/dev/null || true)
+    if [ -x /usr/bin/convert-bdic ]; then
+      CONVERTER=/usr/bin/convert-bdic
+    elif [ -x /usr/lib/qt6/libexec/qwebengine_convert_dict ]; then
+      CONVERTER=/usr/lib/qt6/libexec/qwebengine_convert_dict
+    fi
+    if [ -z "$CONVERTER" ]; then
+      echo "LunaTalk: Qt-WebEngine-Wörterbuchkonverter fehlt; Paketinstallation wird trotzdem abgeschlossen." >&2
+      exit 0
+    fi
+    convert_first() {
+      output=$1; shift
+      for dic in "$@"; do
+        [ -f "$dic" ] || continue
+        aff=${dic%.dic}.aff
+        [ -f "$aff" ] || continue
+        if "$CONVERTER" "$dic" "$OUT/$output"; then
+          echo "LunaTalk: Wörterbuch $output eingerichtet."
+          return 0
+        fi
+      done
+      echo "LunaTalk: kein vollständiges Wörterbuch für $output gefunden; Paketinstallation wird fortgesetzt." >&2
+      return 0
+    }
+    set -- /usr/share/hunspell/de_DE*.dic
+    convert_first de-DE.bdic "$@"
+    convert_first en-US.bdic /usr/share/hunspell/en_US.dic
+    ;;
+esac
+exit 0

@@ -1,0 +1,4 @@
+#!/bin/sh
+# LunaTalk liegt unter /usr/share/lunatalk und nicht im systemweiten Python-Pfad.
+export PYTHONPATH="/usr/share/lunatalk${PYTHONPATH:+:$PYTHONPATH}"
+exec /usr/bin/python3 -m lunatalk "$@"

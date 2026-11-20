@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LunaTalk
+GenericName=Messenger
+Comment=Graphit Messenger-Oberfläche
+Exec=/usr/bin/lunatalk
+Icon=lunatalk
+Terminal=false
+Categories=Network;InstantMessaging;
+StartupNotify=true
