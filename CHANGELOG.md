@@ -1,5 +1,19 @@
 # LunaTalk – Änderungsprotokoll
 
+## 0.2.16
+- Neues natives Qt-System-Tray.
+- LunaTalk verwendet das vom System installierte Qt.
+
+## 0.2.15 – Qt-System-Tray statt GTK
+
+- GTK3-Tray vollständig entfernt und durch das native Qt-`QSystemTrayIcon` ersetzt.
+- Tray-Menü mit „LunaTalk anzeigen“, Anzeige ungelesener Nachrichten und „LunaTalk beenden“ übernommen.
+- Klick auf das Tray-Symbol stellt das Hauptfenster wieder her.
+- GTK-/PyGObject-Laufzeitabhängigkeiten aus dem DEB-Paket entfernt.
+- Versionsnummer bleibt ausdrücklich bei 0.2.15.
+
+# LunaTalk – Änderungsprotokoll
+
 ## Version 0.2.15
 - Versionsanzeige in der Anwendung auf 0.2.15 aktualisiert.
 - Startmenü-Icon zusätzlich im freedesktop-konformen hicolor-Verzeichnis installiert.

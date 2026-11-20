@@ -1,7 +1,7 @@
-# LunaTalk 0.2.15
+# LunaTalk 0.2.16
 
-**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie) Raspberry PI 500. Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. 
-Das System-Tray wird weiterhin über GTK 3 bereitgestellt.
+**LunaTalk** ist eine Desktop-Oberfläche für WhatsApp Web unter Debian 13 (Trixie). Die Anwendung basiert auf Python, PySide6 und Qt WebEngine. 
+Das System-Tray wird nativ über Qt `QSystemTrayIcon` bereitgestellt; GTK wird nicht benötigt. ZIP und DEB starten ausdrücklich mit `/usr/bin/python3 -s`, damit Debian-System-Qt verwendet und `~/.local` ignoriert wird.
 
 ![LunaTalk](lunatalk.png)
 
@@ -12,7 +12,7 @@ Das System-Tray wird weiterhin über GTK 3 bereitgestellt.
 - WhatsApp Web in einem eigenen Desktop-Fenster.
 - Lokale Speicherung der WhatsApp-Sitzung und Einstellungen.
 - Deutsch-/Englisch-Umschaltung in der linken Seitenleiste.
-- GTK3-System-Tray.
+- Qt-System-Tray (`QSystemTrayIcon`).
 - Rechtschreibprüfung über Qt WebEngine mit deutschen und englischen Hunspell-Wörterbüchern (nach erfolgreicher BDIC-Konvertierung).
 - Native Rechtsklick-Funktionen und Rechtschreibvorschläge von Qt WebEngine.
 - Benachrichtigungs-, Berechtigungs- und Video-Einstellungen in der linken Seitenleiste.
@@ -24,16 +24,16 @@ Die obere Leiste ist für **Seitenleiste ein-/ausblenden** und **LunaTalk beende
 - Debian 13 (Trixie), empfohlen auf Raspberry Pi OS / Raspberry Pi 500
 - ARM64 oder eine von Debian unterstützte Architektur
 - Internetverbindung für WhatsApp Web
-- Für die ZIP-Ausführung: Python 3, PySide6 mit Qt WebEngine und GTK 3
+- Für die ZIP-Ausführung: Debian-System-Python 3 und die systemweit installierten PySide6-/Qt-WebEngine-Pakete 
 
 ## Installation mit dem DEB-Paket
 
-1. Lade `lunatalk_0.2.15_all.deb` herunter.
+1. Lade `lunatalk_0.2.16_all.deb` herunter.
 2. Öffne ein Terminal im Download-Ordner.
 3. Installiere das Paket einschließlich der benötigten Abhängigkeiten:
 
    ```bash
-   sudo apt install ./lunatalk_0.2.15_all.deb
+   sudo apt install ./lunatalk_0.2.16_all.deb
    ```
 
    Falls APT fehlende Abhängigkeiten meldet, führe anschließend aus:
@@ -49,13 +49,13 @@ Die obere Leiste ist für **Seitenleiste ein-/ausblenden** und **LunaTalk beende
    ```
 
 Das DEB installiert den Programmcode unter `/usr/share/lunatalk`, den Startbefehl unter `/usr/bin/lunatalk`, den Menüeintrag unter `/usr/share/applications/lunatalk.desktop` 
-und das Startmenü-Symbol im hicolor-Icon-Verzeichnis. Das GTK3-Tray-Symbol bleibt zusätzlich unter `/usr/share/lunatalk/icons/lunatalk.svg`.
+und das Startmenü-Symbol im hicolor-Icon-Verzeichnis. Das Tray-Symbol wird aus dem Programm-Icon-Verzeichnis geladen.
 
 ## Start aus dem ZIP-Archiv
 
 Das ZIP installiert LunaTalk nicht systemweit. Es startet direkt aus dem entpackten Projektordner.
 
-1. Entpacke `LunaTalk_0.2.15_GITHUB.zip`, zum Beispiel in deinen Download-Ordner.
+1. Entpacke `LunaTalk_0.2.16_GITHUB.zip`, zum Beispiel in deinen Download-Ordner.
 2. Öffne ein Terminal und wechsle in den entpackten Ordner:
 
    ```bash
@@ -68,7 +68,7 @@ Das ZIP installiert LunaTalk nicht systemweit. Es startet direkt aus dem entpack
 
    ```bash
    sudo apt update
-   sudo apt install python3 python3-gi gir1.2-gtk-3.0 \
+   sudo apt install python3 \
      python3-pyside6.qtcore python3-pyside6.qtgui \
      python3-pyside6.qtwidgets python3-pyside6.qtwebenginecore \
      python3-pyside6.qtwebenginewidgets qt6-webengine-dev-tools \
@@ -85,7 +85,7 @@ Das ZIP installiert LunaTalk nicht systemweit. Es startet direkt aus dem entpack
 5. Starte LunaTalk aus dem Projektordner:
 
    ```bash
-   PYTHONPATH=. python3 -m lunatalk
+   ./start_lunatalk.sh
    ```
 
 **Wichtig:** Den Startbefehl im Projektordner ausführen, in dem der Unterordner `lunatalk` liegt. Die Wörterbuch-Konvertierung muss nach dem Installieren der Abhängigkeiten einmal ausgeführt werden.

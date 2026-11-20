@@ -37,7 +37,7 @@ from PySide6.QtWebEngineCore import (
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
-from .tray import GtkStatusTray
+from .tray import QtStatusTray
 
 APP_NAME = "LunaTalk"
 APP_VERSION = "0.2.15"
@@ -698,14 +698,14 @@ class MainWindow(QMainWindow):
         self.tray_error_received.connect(self._tray_error)
         self.tray = None
         try:
-            self.tray = GtkStatusTray(
+            self.tray = QtStatusTray(
                 on_show=self.tray_show_requested.emit,
                 on_quit=self.tray_quit_requested.emit,
                 on_error=self.tray_error_received.emit,
             )
         except Exception as exc:
             self.tray = None
-            self.statusBar().showMessage(f"GTK-Tray nicht verfügbar: {exc}", 10000)
+            self.statusBar().showMessage(f"Qt-System-Tray nicht verfügbar: {exc}", 10000)
 
         self.statusBar().showMessage(
             f"LunaTalk {APP_VERSION} · Chrome-Kennung {self._ua_version()} · Sitzung lokal gespeichert"
@@ -783,31 +783,34 @@ class MainWindow(QMainWindow):
         ), 7000)
 
     def _refresh_unread_count(self):
-        # WhatsApp Web exposes unread badges in its chat list. Read only visible
-        # badge nodes and pass the count to GTK; selectors cover current and
-        # older WhatsApp Web DOM variants (German and English labels).
+        # WhatsApp Web exposes unread badges in its chat list. Count each
+        # visible badge once; avoid broad aria/title selectors that can match
+        # duplicate accessibility labels and leave a stale tray count.
         script = r"""(() => {
           const selectors = [
             '[data-testid="icon-unread-count"]',
-            'span[aria-label*="unread"]',
-            'span[aria-label*="ungelesen"]',
-            'span[title*="unread"]',
-            'span[title*="ungelesen"]'
+            '[data-testid="cell-frame-unread-count"]',
+            'span[aria-label*="unread" i]',
+            'span[aria-label*="ungelesen" i]'
           ];
           const nodes = new Set();
           for (const selector of selectors) {
-            document.querySelectorAll(selector).forEach(node => nodes.add(node));
+            document.querySelectorAll(selector).forEach(node => {
+              const style = window.getComputedStyle(node);
+              if (style.display !== 'none' && style.visibility !== 'hidden' &&
+                  node.getClientRects().length) nodes.add(node);
+            });
           }
+          // Prefer the dedicated badge text. De-duplicate nested matches by
+          // counting only the deepest matching badge element.
+          const visible = [...nodes].filter(node =>
+            ![...nodes].some(other => other !== node && node.contains(other))
+          );
           let total = 0;
-          for (const node of nodes) {
-            const style = window.getComputedStyle(node);
-            if (style.display === 'none' || style.visibility === 'hidden') continue;
-            const label = ((node.getAttribute('aria-label') || '') + ' ' +
-                           (node.getAttribute('title') || '') + ' ' +
-                           (node.innerText || node.textContent || '')).trim();
-            const match = label.match(/[0-9]+/);
-            if (match) total += Math.max(0, parseInt(match[0], 10));
-            else if (label) total += 1;
+          for (const node of visible) {
+            const raw = (node.innerText || node.textContent || '').trim();
+            const match = raw.match(/[0-9]+/);
+            total += match ? Math.max(0, parseInt(match[0], 10)) : 1;
           }
           return Math.min(total, 999);
         })()"""
@@ -1013,7 +1016,7 @@ class MainWindow(QMainWindow):
         self.activateWindow()
 
     def _tray_error(self, message: str):
-        self.statusBar().showMessage("GTK-Tray: " + message, 10000)
+        self.statusBar().showMessage("Qt-Tray: " + message, 10000)
 
     def closeEvent(self, event):
         if self.tray is not None:
